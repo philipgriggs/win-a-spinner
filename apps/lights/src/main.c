@@ -13,23 +13,29 @@ static struct os_callout spi_callout;
 
 const int spi_num = 0;
 
+uint8_t buf[584];
+
 /*
 * Event callback function for timer events. It toggles the led pin.
 */
 static void spi_cb(struct os_event *ev)
-{
+{	
 	int i = 0;
-	
+	uint8_t red[4] = {0xff, 0, 0xff, 0};
+
 	assert(ev != NULL);
 
 	hal_gpio_toggle(LED_BLINK_PIN);
 	
 	console_printf("Sending SPI \n");
 	
-	for (i = 0; i < 10; i++)
+	for(i = 0; i < 144; i++)
 	{
-		hal_spi_tx_val(spi_num, 0x0f);
+		memcpy(&buf[4*i+4], red, sizeof(red));
 	}
+	memset(&buf[580], 0xff, 4);	
+
+	hal_spi_txrx(spi_num, buf, NULL, sizeof(buf));
 
 	os_callout_reset(&spi_callout, OS_TICKS_PER_SEC);
 }
